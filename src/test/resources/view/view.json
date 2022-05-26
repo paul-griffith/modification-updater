@@ -1,0 +1,299 @@
+{
+  "custom": {},
+  "params": {},
+  "props": {},
+  "root": {
+    "children": [
+      {
+        "events": {
+          "component": {
+            "onEditCellCommit": {
+              "config": {
+                "script": "\ttoplevel.childFunction()"
+              },
+              "scope": "G",
+              "type": "script"
+            }
+          }
+        },
+        "meta": {
+          "name": "Table"
+        },
+        "position": {
+          "height": 400,
+          "width": 400,
+          "x": 132,
+          "y": 93
+        },
+        "props": {
+          "data": [
+            {
+              "city": {
+                "align": "center",
+                "editable": true,
+                "justify": "left",
+                "style": {
+                  "backgroundColor": "#F7901D",
+                  "classes": "some-class"
+                },
+                "value": "Folsom"
+              },
+              "country": "United States",
+              "population": 77271
+            },
+            {
+              "city": "Helsinki",
+              "country": "Finland",
+              "population": 635591
+            },
+            {
+              "city": "Jakarta",
+              "country": "Indonesia",
+              "population": 10187595
+            },
+            {
+              "city": "Madrid",
+              "country": "Spain",
+              "population": 3233527
+            },
+            {
+              "city": "Prague",
+              "country": "Czech Republic",
+              "population": 1241664
+            },
+            {
+              "city": "San Diego",
+              "country": "United States",
+              "population": 1406630
+            },
+            {
+              "city": "San Francisco",
+              "country": "United States",
+              "population": 884363
+            },
+            {
+              "city": "Shanghai",
+              "country": "China",
+              "population": 24153000
+            },
+            {
+              "city": "Tokyo",
+              "country": "Japan",
+              "population": 13617000
+            },
+            {
+              "city": "Washington, DC",
+              "country": "United States",
+              "population": 658893
+            },
+            {
+              "city": "Wellington",
+              "country": "New Zealand",
+              "population": 405000
+            },
+            {
+              "city": "Delhi",
+              "country": "India",
+              "population": 11034555
+            },
+            {
+              "city": "Dhaka",
+              "country": "Bangladesh",
+              "population": 14399000
+            },
+            {
+              "city": "Lagos",
+              "country": "Nigeria",
+              "population": 16060303
+            },
+            {
+              "city": "Karachi",
+              "country": "Pakistan",
+              "population": 14910352
+            },
+            {
+              "city": "Istanbul",
+              "country": "Turkey",
+              "population": 14025000
+            },
+            {
+              "city": "Cairo",
+              "country": "Egypt",
+              "population": 10230350
+            },
+            {
+              "city": "Mexico City",
+              "country": "Mexico",
+              "population": 8974724
+            },
+            {
+              "city": "London",
+              "country": "United Kingdom",
+              "population": 8825001
+            },
+            {
+              "city": "New York City",
+              "country": "United States",
+              "population": 8622698
+            },
+            {
+              "city": "Tehran",
+              "country": "Iran",
+              "population": 8154051
+            },
+            {
+              "city": "Bogota",
+              "country": "Colombia",
+              "population": 7878783
+            },
+            {
+              "city": "Rio de Janeiro",
+              "country": "Brazil",
+              "population": 6429923
+            },
+            {
+              "city": "Riyadh",
+              "country": "Saudi Arabia",
+              "population": 5676621
+            },
+            {
+              "city": "Singapore",
+              "country": "Singapore",
+              "population": 5535000
+            },
+            {
+              "city": "Saint Petersburg",
+              "country": "Russia",
+              "population": 5191690
+            },
+            {
+              "city": "Sydney",
+              "country": "Australia",
+              "population": 208374
+            },
+            {
+              "city": "Abidjan",
+              "country": "Ivory Coast",
+              "population": 4765000
+            },
+            {
+              "city": "Dar es Salaam",
+              "country": "Tanzania",
+              "population": 4364541
+            },
+            {
+              "city": "Wellington",
+              "country": "New Zealand",
+              "population": 405000
+            },
+            {
+              "city": "Los Angeles",
+              "country": "United States",
+              "population": 3884307
+            },
+            {
+              "city": "Berlin",
+              "country": "Germany",
+              "population": 3517424
+            },
+            {
+              "city": "Jeddah",
+              "country": "Saudi Arabia",
+              "population": 3456259
+            },
+            {
+              "city": "Kabul",
+              "country": "Afghanistan",
+              "population": 3414100
+            },
+            {
+              "city": "Mashhad",
+              "country": "Iran",
+              "population": 3001184
+            },
+            {
+              "city": "Milan",
+              "country": "Italy",
+              "population": 1359905
+            },
+            {
+              "city": "Kiev",
+              "country": "Ukraine",
+              "population": 2908703
+            },
+            {
+              "city": "Rome",
+              "country": "Italy",
+              "population": 2877215
+            },
+            {
+              "city": "Chicago",
+              "country": "United States",
+              "population": 2695598
+            },
+            {
+              "city": "Osaka",
+              "country": "Japan",
+              "population": 2691742
+            },
+            {
+              "city": "Bandung",
+              "country": "Indonesia",
+              "population": 2575478
+            },
+            {
+              "city": "Managua",
+              "country": "Nicaragua",
+              "population": 2560789
+            },
+            {
+              "city": "Paris",
+              "country": "France",
+              "population": 2229621
+            },
+            {
+              "city": "Shiraz",
+              "country": "Iran",
+              "population": 1869001
+            },
+            {
+              "city": "Manila",
+              "country": "Philippines",
+              "population": 1780148
+            },
+            {
+              "city": "Montreal",
+              "country": "Canada",
+              "population": 1649519
+            },
+            {
+              "city": "Guadalajara",
+              "country": "Mexico",
+              "population": 1495189
+            },
+            {
+              "city": "Dallas",
+              "country": "United States",
+              "population": 1317929
+            },
+            {
+              "city": "Yerevan",
+              "country": "Armenia",
+              "population": 1060138
+            },
+            {
+              "city": "Tunis",
+              "country": "Tunisia",
+              "population": 1056247
+            }
+          ]
+        },
+        "type": "ia.display.table"
+      }
+    ],
+    "meta": {
+      "name": "root"
+    },
+    "type": "ia.container.coord"
+  }
+}
