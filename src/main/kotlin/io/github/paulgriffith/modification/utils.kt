@@ -10,6 +10,17 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import java.io.InputStream
+import java.time.Instant
+import java.time.format.DateTimeFormatter
+import java.util.*
+
+@OptIn(ExperimentalSerializationApi::class)
+val JSON = Json {
+    prettyPrint = true
+    prettyPrintIndent = "  "
+    explicitNulls = false
+    encodeDefaults = true
+}
 
 object ApplicationScopeDeserializer : KSerializer<Int> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("scope", PrimitiveKind.STRING)
@@ -39,6 +50,18 @@ object ApplicationScopeDeserializer : KSerializer<Int> {
     }
 }
 
+object InstantSerializer : KSerializer<Instant> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("java.time.Instant", PrimitiveKind.STRING)
+
+    override fun deserialize(decoder: Decoder): Instant {
+        return Instant.parse(decoder.decodeString())
+    }
+
+    override fun serialize(encoder: Encoder, value: Instant) {
+        encoder.encodeString(DateTimeFormatter.ISO_INSTANT.format(value))
+    }
+}
+
 internal fun Int.toByteArray(): ByteArray = byteArrayOf(
     (this shr 24).toByte(),
     (this shr 16).toByte(),
@@ -48,9 +71,13 @@ internal fun Int.toByteArray(): ByteArray = byteArrayOf(
 
 internal fun Boolean.toByte(): Byte = (if (this) 1 else 0).toByte()
 
+private val hexFormat = HexFormat.of()
+
+internal fun ByteArray.toHexString(): String = hexFormat.formatHex(this)
+
 @OptIn(ExperimentalSerializationApi::class)
 fun InputStream.toManifest(): ResourceManifest {
     return use { resourceStream ->
-        Json.decodeFromStream(resourceStream)
+        JSON.decodeFromStream(ResourceManifest.serializer(), resourceStream)
     }
 }
