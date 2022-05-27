@@ -1,9 +1,11 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     application
     java
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.serialization") version "1.6.21"
-    id("org.graalvm.buildtools.native") version "0.9.4"
+    id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 repositories {
@@ -13,6 +15,7 @@ repositories {
 
 dependencies {
     implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.3.3")
+    implementation("com.github.ajalt.clikt", "clikt", "3.4.0")
 
     val kotestVersion = "5.3.0"
     testImplementation("io.kotest", "kotest-runner-junit5", kotestVersion)
@@ -26,7 +29,16 @@ version = "1.0-SNAPSHOT"
 description = "modification-updater"
 
 tasks {
-    withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    shadowJar {
+        manifest {
+            attributes["Main-Class"] = application.mainClass.get()
+        }
+        archiveBaseName.set("modification-updater")
+        archiveClassifier.set("")
+        archiveVersion.set("")
+        mergeServiceFiles()
+    }
+    withType<KotlinCompile> {
         kotlinOptions {
             jvmTarget = JavaVersion.VERSION_17.toString()
             freeCompilerArgs = listOf(
@@ -44,13 +56,7 @@ application {
 }
 
 java {
-    val toolchain = toolchain {
+    toolchain {
         languageVersion.set(JavaLanguageVersion.of(17))
-        vendor.set(JvmVendorSpec.GRAAL_VM)
-    }
-    nativeBuild {
-        javaLauncher.set(
-            javaToolchains.launcherFor(toolchain)
-        )
     }
 }
