@@ -1,0 +1,21 @@
+name: Build native images on push to master
+on:
+  push:
+    branches:
+      - main
+jobs:
+  gradle:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+      - name: Execute Gradle build & shadowJar
+        run: ./gradlew build
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Package
+          path: build/native/nativeBuild/modification-updater
