@@ -43,11 +43,14 @@ application {
     mainClass.set("io.github.paulgriffith.modification.Entrypoint")
 }
 
-nativeBuild {
-    javaLauncher.set(
-        javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(17))
-            vendor.set(JvmVendorSpec.GRAAL_VM)
-        }
-    )
+java {
+    val toolchain = toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+        vendor.set(JvmVendorSpec.GRAAL_VM)
+    }
+    nativeBuild {
+        javaLauncher.set(
+            javaToolchains.launcherFor(toolchain)
+        )
+    }
 }
