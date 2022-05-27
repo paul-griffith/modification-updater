@@ -1,7 +1,9 @@
 plugins {
+    application
     java
     kotlin("jvm") version "1.6.21"
     kotlin("plugin.serialization") version "1.6.21"
+    id("org.graalvm.buildtools.native") version "0.9.4"
 }
 
 repositories {
@@ -34,4 +36,17 @@ tasks {
     withType<Test>().configureEach {
         useJUnitPlatform()
     }
+}
+
+application {
+    mainClass.set("io.github.paulgriffith.modification.Entrypoint")
+}
+
+nativeBuild {
+    javaLauncher.set(
+        javaToolchains.launcherFor {
+            languageVersion.set(JavaLanguageVersion.of(17))
+            vendor.set(JvmVendorSpec.GRAAL_VM)
+        }
+    )
 }
