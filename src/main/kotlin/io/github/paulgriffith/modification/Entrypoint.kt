@@ -1,37 +1,49 @@
 @file:JvmName("Entrypoint")
+
 package io.github.paulgriffith.modification
 
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.multiple
+import com.github.ajalt.clikt.parameters.options.convert
+import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.path
+import java.nio.file.Path
 import java.time.Instant
-import kotlin.io.path.Path
 import kotlin.io.path.inputStream
 import kotlin.io.path.readBytes
 
-fun main(args: Array<String>) {
-    when (args.getOrElse(0) { "-h" }) {
-        "-s" -> {
-            val resource = getResource(args[1])
-            println(resource.getSignature())
+class ModificationUpdater : CliktCommand(help = "Pass path(s) to resources to update their attributes accordingly.", printHelpOnEmptyArgs = true) {
+    private val signature: Boolean by option("-s", "--signature").flag()
+    private val resources: List<Path> by argument(help = "The file to target").path(
+        mustExist = true,
+        canBeFile = false,
+        mustBeReadable = true
+    ).multiple()
+    private val actor by option("-a", "--actor", help = "The new actor name").default("external")
+    private val timestamp by option("-t", "--timestamp", help = "The update timestamp").convert { Instant.parse(it) }
+
+    override fun run() {
+        resources.forEach { resourcePath ->
+            val resource = getResource(resourcePath)
+            if (signature) {
+                println(resource.getSignature())
+            } else {
+                val updated = resource.update(actor, timestamp)
+                println(JSON.encodeToString(ResourceManifest.serializer(), updated.manifest))
+            }
         }
-        "-u" -> {
-            val resource = getResource(args[1])
-            val updated = resource.update(args[2], args.getOrNull(3)?.let { Instant.parse(it) })
-            println(JSON.encodeToString(ResourceManifest.serializer(), updated.manifest))
+    }
+
+    private fun getResource(location: Path): ProjectResource {
+        val manifest = location.resolve("resource.json").inputStream().toManifest()
+        val data = manifest.files.associateWith { fileName ->
+            DataLoader { location.resolve(fileName).readBytes() }
         }
-        else -> {
-            println("USAGE: modification-updater flag [arguments]")
-            println()
-            println("-h - Shows this help message.")
-            println("-s - Returns the signature of the resource file passed as the first argument.")
-            println("-u - Updates the resource file passed as the first argument with a new actor and, optionally, timestamp")
-        }
+        return ProjectResource(manifest, data)
     }
 }
 
-private fun getResource(location: String): ProjectResource {
-    val basePath = Path(location)
-    val manifest = basePath.resolve("resource.json").inputStream().toManifest()
-    val data = manifest.files.associateWith { fileName ->
-        DataLoader { basePath.resolve(fileName).readBytes() }
-    }
-    return ProjectResource(manifest, data)
-}
+fun main(args: Array<String>) = ModificationUpdater().main(args)
