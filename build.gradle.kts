@@ -52,9 +52,14 @@ tasks {
             )
         }
     }
-    withType<Test>().configureEach {
+    withType<Test>(){
+    }.configureEach {
         useJUnitPlatform()
+        this.testLogging {
+            this.showStandardStreams = true
+        }
     }
+
 }
 
 application {
