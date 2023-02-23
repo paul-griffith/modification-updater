@@ -15,7 +15,7 @@ fun ProjectResource.getSignature(): String {
     ).toHexString()
 }
 
-fun ProjectResource.update(actor: String, time: Instant?): ProjectResource {
+fun ProjectResource.update(actor: String, time: Instant): ProjectResource {
     val toSign = buildMap {
         putAll(manifest.attributes)
         remove(LAST_MODIFICATION_SIGNATURE)
@@ -23,7 +23,7 @@ fun ProjectResource.update(actor: String, time: Instant?): ProjectResource {
             LAST_MODIFICATION,
             JSON.encodeToJsonElement(
                 LastModification.serializer(),
-                LastModification(actor, time ?: Instant.now())
+                LastModification(actor, time)
             )
         )
     }

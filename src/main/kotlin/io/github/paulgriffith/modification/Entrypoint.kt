@@ -54,12 +54,11 @@ class ModificationUpdater : CliktCommand(
     private val timestamp by option(
         "-t",
         "--timestamp",
-        help = "The update timestamp"
+        help = "The update timestamp",
+        hidden = true // this exists for testing only
     ).convert {
         Instant.parse(it)
-    }.default(
-        Instant.now()
-    )
+    }.default(Instant.now())
 
     override fun run() {
         resources.forEach { resourcePath ->
