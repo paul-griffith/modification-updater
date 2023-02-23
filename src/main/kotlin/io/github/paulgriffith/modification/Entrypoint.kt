@@ -37,6 +37,13 @@ class ModificationUpdater : CliktCommand(
         help="Prints the new file to the console"
     ).flag()
 
+    // if files and attributes are unchanged, use this
+    // to force an update of the actor and timestamp
+    private val shouldForceUpdate: Boolean by option(
+        "--force",
+        hidden=true
+    ).flag()
+
     private val resources: List<Path> by argument(
         help = "The file to target"
     ).path(
@@ -71,7 +78,7 @@ class ModificationUpdater : CliktCommand(
 
             var updated: ProjectResource? = null
             if (noReplace || toConsole){
-                updated = resource.update(actor, timestamp)
+                updated = resource.update(actor, timestamp, shouldForceUpdate)
             }
 
             if (updated != null && toConsole){

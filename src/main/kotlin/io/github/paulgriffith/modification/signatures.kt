@@ -2,45 +2,93 @@ package io.github.paulgriffith.modification
 
 import io.github.paulgriffith.modification.LastModification.Companion.LAST_MODIFICATION
 import io.github.paulgriffith.modification.LastModification.Companion.LAST_MODIFICATION_SIGNATURE
+import io.github.paulgriffith.modification.LastModification.Companion.lastModification
 import kotlinx.serialization.json.JsonPrimitive
 import java.security.MessageDigest
 import java.time.Instant
 
 fun ProjectResource.getSignature(): String {
-    return calculateContentDigest(
+    return calculateContentHex(
         manifest = manifest.copy(
             attributes = manifest.attributes - LAST_MODIFICATION_SIGNATURE
         ),
         data = data
-    ).toHexString()
+    )
 }
 
-fun ProjectResource.update(actor: String, time: Instant): ProjectResource {
-    val toSign = buildMap {
-        putAll(manifest.attributes)
-        remove(LAST_MODIFICATION_SIGNATURE)
+private fun ResourceManifest.mapAttributes(
+    actor: String?,
+    time: Instant?,
+    digest: String?
+) : ResourceManifest{
+
+    val newMod = LastModification(
+        actor = actor ?: lastModification.actor,
+        timestamp = time ?: lastModification.timestamp
+    )
+
+    val newAttrs = buildMap {
+        putAll(attributes)
+        if (digest == null) {
+            remove(LAST_MODIFICATION_SIGNATURE)
+        } else {
+            put(
+                LAST_MODIFICATION_SIGNATURE,
+                JsonPrimitive(digest)
+            )
+        }
         put(
             LAST_MODIFICATION,
             JSON.encodeToJsonElement(
                 LastModification.serializer(),
-                LastModification(actor, time)
+                newMod
             )
         )
     }
-    val intermediateManifest = manifest.copy(attributes = toSign)
-    val newAttributes = toSign.plus(
-        LAST_MODIFICATION_SIGNATURE to JsonPrimitive(
-            calculateContentDigest(intermediateManifest, data).toHexString()
-        )
-    )
-    return copy(
-        manifest = manifest.copy(
-            attributes = newAttributes
-        )
-    )
+
+    return this.copy(attributes = newAttrs)
 }
 
-private fun calculateContentDigest(manifest: ResourceManifest, data: Map<String, DataLoader>): ByteArray {
+fun ProjectResource.update(
+    actor: String,
+    time: Instant,
+    force:Boolean
+): ProjectResource {
+    val currentSignature = this.getSignature()
+    val lastSignature = manifest.attributes[LAST_MODIFICATION_SIGNATURE].toString()
+
+    if (
+        !force
+        && lastSignature == currentSignature
+    ){
+        return ProjectResource(manifest, data)
+    }
+
+    val tempManifest = manifest.mapAttributes(actor, time, null)
+    val tempProResource = ProjectResource(tempManifest, data)
+    val updatedManifest = tempManifest.mapAttributes(
+        actor,
+        time,
+        tempProResource.getSignature()
+    )
+
+    return ProjectResource(updatedManifest, data)
+}
+
+private fun calculateContentHex(
+    manifest: ResourceManifest,
+    data: Map<String, DataLoader>
+): String {
+    return calculateContentDigest(
+        manifest,
+        data
+    ).toHexString()
+}
+
+private fun calculateContentDigest(
+    manifest: ResourceManifest,
+    data: Map<String, DataLoader>
+): ByteArray {
     return MessageDigest.getInstance("SHA-256").apply {
         update(manifest.scope.toByteArray())
 

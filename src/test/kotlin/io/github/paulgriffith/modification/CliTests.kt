@@ -17,7 +17,10 @@ class CliTests : FunSpec({
 
     test("Signature check") {
         captureStandardOut {
-            cli.parse(listOf("-s", "-nr", "src/test/resources/script"))
+            cli.parse(listOf(
+                "-s", "-nr", "--force",
+                "src/test/resources/script"
+            ))
         }.trim() shouldBe "7ea951abc0ddc97f549f41a5670b06aa513b30e189050159f40e207cfe502b02"
     }
 
@@ -27,6 +30,7 @@ class CliTests : FunSpec({
                 cli.parse(listOf(
                     "-s",
                     "-nr",
+                    "--force",
                     "src/test/resources/script",
                     "src/test/resources/script2",
                     "src/test/resources/view"))
@@ -52,10 +56,10 @@ class CliTests : FunSpec({
     test("Single resource update") {
         captureStandardOut {
             cli.parse(listOf(
-                "src/test/resources/script",
                 "--actor", "test",
                 "--timestamp", "2022-05-27T16:47:43Z",
-                "--console", "-nr"
+                "--console", "-nr", "--force",
+                "src/test/resources/script"
             )
         )
         }.trim() shouldBe
