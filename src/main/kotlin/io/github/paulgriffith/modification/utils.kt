@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import java.io.InputStream
 import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
@@ -50,15 +51,28 @@ object ApplicationScopeDeserializer : KSerializer<Int> {
     }
 }
 
+fun getDateTimeFormatter() : DateTimeFormatter{
+    return DateTimeFormatter
+        .ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        .withLocale(Locale.UK)
+        .withZone(ZoneId.of("UTC"))
+}
+
 object InstantSerializer : KSerializer<Instant> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("java.time.Instant", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
+        "java.time.Instant",
+        PrimitiveKind.STRING
+    )
 
     override fun deserialize(decoder: Decoder): Instant {
-        return Instant.parse(decoder.decodeString())
+        val dtf = getDateTimeFormatter()
+
+        return Instant.from(dtf.parse(decoder.decodeString()))
     }
 
     override fun serialize(encoder: Encoder, value: Instant) {
-        encoder.encodeString(DateTimeFormatter.ISO_INSTANT.format(value))
+        val dtf = getDateTimeFormatter()
+        encoder.encodeString(dtf.format(value))
     }
 }
 
