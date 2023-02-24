@@ -3,134 +3,125 @@
 package io.github.paulgriffith.modification
 
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.defaultLazy
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.path
 import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.encodeToStream
-import java.io.FileOutputStream
 import java.nio.file.Path
 import java.time.Instant
 import kotlin.io.path.inputStream
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.outputStream
 import kotlin.io.path.readBytes
 
 class ModificationUpdater : CliktCommand(
     help = "Pass path(s) to resources to update their attributes accordingly.",
-    printHelpOnEmptyArgs = true
+    printHelpOnEmptyArgs = true,
 ) {
-    private val sigOnly: Boolean by option(
-        "-s", "--signature",
-        help="Prints the signature only"
+    private val signatureOnly: Boolean by option(
+        "-s",
+        "--signature",
+        help = "Prints the signature only",
     ).flag()
 
     private val noReplace: Boolean by option(
-        "-nr", "--no-replace",
-        help="Will NOT replace the resource.json file"
+        "-nr",
+        "--no-replace",
+        help = "Will NOT replace the resource.json file",
     ).flag()
 
     private val toConsole: Boolean by option(
-        "-c", "--console",
-        help="Prints the new file to the console"
+        "-c",
+        "--console",
+        help = "Prints the new file to the console",
     ).flag()
 
     // if files and attributes are unchanged, use this
     // to force an update of the actor and timestamp
     private val shouldForceUpdate: Boolean by option(
         "--force",
-        hidden=true
+        hidden = true,
     ).flag()
 
     private val resources: List<Path> by argument(
-        help = "The file to target"
+        help = "The file to target",
     ).path(
         mustExist = true,
         canBeFile = false,
-        mustBeReadable = true
+        mustBeReadable = true,
     ).multiple()
 
     private val actor by option(
         "-a",
         "--actor",
-        help = "The new actor name"
+        help = "The new actor name",
     ).default(System.getProperty("user.name"))
 
     private val timestamp by option(
         "-t",
         "--timestamp",
-        hidden = true // this exists for testing only
-    ).convert {
-        Instant.parse(it)
-    }.default(Instant.now())
+        hidden = true, // this exists for testing only
+    ).convert { timestamp ->
+        Instant.parse(timestamp)
+    }.defaultLazy(value = Instant::now)
 
     override fun run() {
-        resources.forEach { resourcePath ->
-            val resourceFile = locateResourceFile(resourcePath)
-            var manifest = resourceToManifest(resourceFile)
-            val resource = getProjectResource(resourcePath, manifest)
+        for (resourcePath in resources) {
+            try {
+                val resource = if (resourcePath.isRegularFile()) {
+                    resourcePath.parent.toResource()
+                } else {
+                    resourcePath.toResource()
+                }
 
-            if (sigOnly) {
-                println(resource.getSignature())
-            }
+                if (signatureOnly) {
+                    println(resource.getSignature())
+                }
 
-            var updated: ProjectResource? = null
-            if (noReplace || toConsole){
-                updated = resource.update(actor, timestamp, shouldForceUpdate)
-            }
+                var updated: ProjectResource? = null
+                if (noReplace || toConsole) {
+                    updated = resource.update(actor, timestamp, shouldForceUpdate)
+                }
 
-            if (updated != null && toConsole){
-                println(
-                    JSON.encodeToString(
-                        ResourceManifest.serializer(),
-                        updated.manifest
+                if (updated != null && toConsole) {
+                    println(JSON.encodeToString(updated.manifest))
+                }
+
+                if (updated != null && !noReplace) {
+                    writeManifest(
+                        resourcePath.resolve(ResourceManifest.FILENAME),
+                        updated.manifest,
                     )
-                )
-            }
-
-            if (updated != null && !noReplace){
-                writeManifest(
-                    resourceFile,
-                    updated.manifest
-                )
+                }
+            } catch (e: Exception) {
+                throw CliktError(cause = e)
             }
         }
     }
 
-    private fun locateResourceFile(folderPath: Path) : Path{
-        return folderPath.resolve("resource.json");
-    }
-
-    private fun resourceToManifest(resourceFile: Path): ResourceManifest{
-        return resourceFile.inputStream().toManifest()
-    }
-
-    private fun getProjectResource(
-        folderPath: Path,
-        manifest: ResourceManifest
-    ) : ProjectResource{
-        return ProjectResource(
-            manifest,
-            manifest.files.associateWith {
-                    fn -> DataLoader { folderPath.resolve(fn).readBytes() }
-            }
-        )
+    private fun Path.toResource(): ProjectResource {
+        val manifest = resolve(ResourceManifest.FILENAME).inputStream().toManifest()
+        val data = manifest.files.associateWith { fileName ->
+            val filePath = resolve(fileName)
+            DataLoader(filePath::readBytes)
+        }
+        return ProjectResource(manifest, data)
     }
 
     @OptIn(ExperimentalSerializationApi::class)
-    private fun writeManifest(
-        resourceFile: Path,
-        manifest: ResourceManifest
-    ){
-        JSON.encodeToStream(
-            ResourceManifest.serializer(),
-            manifest,
-            FileOutputStream(resourceFile.toFile())
-        )
+    private fun writeManifest(manifestPath: Path, manifest: ResourceManifest) {
+        manifestPath.outputStream().use { stream ->
+            JSON.encodeToStream(manifest, stream)
+        }
     }
-
 }
 
 fun main(args: Array<String>) = ModificationUpdater().main(args)

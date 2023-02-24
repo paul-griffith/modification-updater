@@ -2,6 +2,7 @@ package io.github.paulgriffith.modification
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.decodeFromJsonElement
 import java.time.Instant
 
 @Serializable
@@ -15,7 +16,11 @@ data class ResourceManifest(
     val overridable: Boolean = true,
     val files: List<String> = emptyList(),
     val attributes: Map<String, JsonElement>,
-)
+) {
+    companion object {
+        const val FILENAME = "resource.json"
+    }
+}
 
 @Serializable
 data class LastModification(
@@ -25,7 +30,7 @@ data class LastModification(
 ) {
     companion object {
         val ResourceManifest.lastModification: LastModification
-            get() = JSON.decodeFromJsonElement(serializer(), attributes.getValue(LAST_MODIFICATION))
+            get() = JSON.decodeFromJsonElement(attributes.getValue(LAST_MODIFICATION))
 
         const val LAST_MODIFICATION = "lastModification"
         const val LAST_MODIFICATION_SIGNATURE = "lastModificationSignature"

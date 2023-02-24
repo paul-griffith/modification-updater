@@ -4,72 +4,60 @@ import io.github.paulgriffith.modification.LastModification.Companion.LAST_MODIF
 import io.github.paulgriffith.modification.LastModification.Companion.LAST_MODIFICATION_SIGNATURE
 import io.github.paulgriffith.modification.LastModification.Companion.lastModification
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.encodeToJsonElement
 import java.security.MessageDigest
 import java.time.Instant
 
 fun ProjectResource.getSignature(): String {
     return calculateContentHex(
         manifest = manifest.copy(
-            attributes = manifest.attributes - LAST_MODIFICATION_SIGNATURE
+            attributes = manifest.attributes - LAST_MODIFICATION_SIGNATURE,
         ),
-        data = data
+        data = data,
     )
 }
 
-private fun ResourceManifest.mapAttributes(
+private fun ResourceManifest.updateAttributes(
     actor: String?,
     time: Instant?,
-    digest: String?
-) : ResourceManifest{
+    signature: String?,
+): ResourceManifest {
+    return copy(
+        attributes = buildMap {
+            putAll(attributes)
+            if (signature == null) {
+                remove(LAST_MODIFICATION_SIGNATURE)
+            } else {
+                put(LAST_MODIFICATION_SIGNATURE, JsonPrimitive(signature))
+            }
 
-    val newMod = LastModification(
-        actor = actor ?: lastModification.actor,
-        timestamp = time ?: lastModification.timestamp
+            val newMod = LastModification(
+                actor = actor ?: lastModification.actor,
+                timestamp = time ?: lastModification.timestamp,
+            )
+            put(LAST_MODIFICATION, JSON.encodeToJsonElement(newMod))
+        },
     )
-
-    val newAttrs = buildMap {
-        putAll(attributes)
-        if (digest == null) {
-            remove(LAST_MODIFICATION_SIGNATURE)
-        } else {
-            put(
-                LAST_MODIFICATION_SIGNATURE,
-                JsonPrimitive(digest)
-            )
-        }
-        put(
-            LAST_MODIFICATION,
-            JSON.encodeToJsonElement(
-                LastModification.serializer(),
-                newMod
-            )
-        )
-    }
-
-    return this.copy(attributes = newAttrs)
 }
 
 fun ProjectResource.update(
     actor: String,
     time: Instant,
-    force:Boolean
+    force: Boolean,
 ): ProjectResource {
-    val currentSignature = this.getSignature()
+    val currentSignature = getSignature()
     val lastSignature = manifest.attributes[LAST_MODIFICATION_SIGNATURE].toString()
 
-    if (
-        !force
-        && lastSignature == currentSignature
-    ){
+    if (lastSignature == currentSignature && !force) {
         return ProjectResource(manifest, data)
     }
 
-    val tempManifest = manifest.mapAttributes(actor, time, null)
-    val tempProResource = ProjectResource(tempManifest, data)
-    val updatedManifest = tempManifest.mapAttributes(
+    val tempManifest = manifest.updateAttributes(actor, time, null)
+    val tempResource = ProjectResource(tempManifest, data)
+    val updatedManifest = tempManifest.updateAttributes(
         actor,
         time,
-        tempProResource.getSignature()
+        tempResource.getSignature(),
     )
 
     return ProjectResource(updatedManifest, data)
@@ -77,17 +65,17 @@ fun ProjectResource.update(
 
 private fun calculateContentHex(
     manifest: ResourceManifest,
-    data: Map<String, DataLoader>
+    data: Map<String, DataLoader>,
 ): String {
     return calculateContentDigest(
         manifest,
-        data
+        data,
     ).toHexString()
 }
 
 private fun calculateContentDigest(
     manifest: ResourceManifest,
-    data: Map<String, DataLoader>
+    data: Map<String, DataLoader>,
 ): ByteArray {
     return MessageDigest.getInstance("SHA-256").apply {
         update(manifest.scope.toByteArray())
@@ -101,13 +89,12 @@ private fun calculateContentDigest(
         update(manifest.restricted.toByte())
         update(manifest.overridable.toByte())
 
-        manifest.files.sorted().forEach { key ->
+        for (key in manifest.files.sorted()) {
             update(key.toByteArray())
-            val dataLoader = data[key] ?: DataLoader { ByteArray(0) }
-            update(dataLoader.getData())
+            update(data[key]?.getData() ?: byteArrayOf())
         }
 
-        manifest.attributes.entries.sortedBy { it.key }.forEach { (attribute, value) ->
+        for ((attribute, value) in manifest.attributes.entries.sortedBy { it.key }) {
             update(attribute.toByteArray())
             update(value.toString().toByteArray())
         }
