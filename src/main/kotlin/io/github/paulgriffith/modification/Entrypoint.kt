@@ -56,7 +56,7 @@ class ModificationUpdater : CliktCommand(
         "-a",
         "--actor",
         help = "The new actor name"
-    ).default("external")
+    ).default(System.getProperty("user.name"))
 
     private val timestamp by option(
         "-t",
