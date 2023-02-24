@@ -1,8 +1,10 @@
+@Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369
 plugins {
     application
-    kotlin("jvm") version "1.8.10"
-    kotlin("plugin.serialization") version "1.8.10"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    alias(libs.plugins.kotlin)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.shadow)
 }
 
 repositories {
@@ -10,17 +12,13 @@ repositories {
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.4.1")
-    implementation("com.github.ajalt.clikt", "clikt", "3.5.1")
-
-    val kotestVersion = "5.5.5"
-    testImplementation("io.kotest", "kotest-runner-junit5", kotestVersion)
-    testImplementation("io.kotest", "kotest-framework-datatest", kotestVersion)
-    testImplementation("io.kotest", "kotest-assertions-core", kotestVersion)
+    implementation(libs.serialization.json)
+    implementation(libs.clikt)
+    implementation(libs.bundles.kotest)
 }
 
 group = "io.github.paulgriffith"
-version = "1.0-SNAPSHOT"
+version = "1.0.0-SNAPSHOT"
 description = "modification-updater"
 
 tasks {
