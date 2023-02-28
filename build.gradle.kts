@@ -32,7 +32,7 @@ tasks {
         mergeServiceFiles()
     }
     kotlin {
-        jvmToolchain(17)
+        jvmToolchain(libs.versions.java.map(String::toInt).get())
     }
     test {
         useJUnitPlatform()
