@@ -8,19 +8,10 @@ import kotlinx.serialization.json.encodeToJsonElement
 import java.security.MessageDigest
 import java.time.Instant
 
-fun ProjectResource.getSignature(): String {
-    return calculateContentHex(
-        manifest = manifest.copy(
-            attributes = manifest.attributes - LAST_MODIFICATION_SIGNATURE,
-        ),
-        data = data,
-    )
-}
-
 private fun ResourceManifest.updateAttributes(
     actor: String?,
     time: Instant?,
-    signature: String?,
+    signature: ByteArray?,
 ): ResourceManifest {
     return copy(
         attributes = buildMap {
@@ -28,7 +19,7 @@ private fun ResourceManifest.updateAttributes(
             if (signature == null) {
                 remove(LAST_MODIFICATION_SIGNATURE)
             } else {
-                put(LAST_MODIFICATION_SIGNATURE, JsonPrimitive(signature))
+                put(LAST_MODIFICATION_SIGNATURE, JsonPrimitive(signature.encodeHex()))
             }
 
             val newMod = LastModification(
@@ -45,10 +36,10 @@ fun ProjectResource.update(
     time: Instant,
     force: Boolean,
 ): ProjectResource {
-    val currentSignature = getSignature()
-    val lastSignature = manifest.attributes[LAST_MODIFICATION_SIGNATURE].toString()
+    val currentSignature = calculateSignature()
+    val lastSignature = manifest.signature
 
-    if (lastSignature == currentSignature && !force) {
+    if (lastSignature.contentEquals(currentSignature) && !force) {
         return ProjectResource(manifest, data)
     }
 
@@ -57,26 +48,13 @@ fun ProjectResource.update(
     val updatedManifest = tempManifest.updateAttributes(
         actor,
         time,
-        tempResource.getSignature(),
+        tempResource.calculateSignature(),
     )
 
     return ProjectResource(updatedManifest, data)
 }
 
-private fun calculateContentHex(
-    manifest: ResourceManifest,
-    data: Map<String, DataLoader>,
-): String {
-    return calculateContentDigest(
-        manifest,
-        data,
-    ).toHexString()
-}
-
-private fun calculateContentDigest(
-    manifest: ResourceManifest,
-    data: Map<String, DataLoader>,
-): ByteArray {
+fun ProjectResource.calculateSignature(): ByteArray {
     return MessageDigest.getInstance("SHA-256").apply {
         update(manifest.scope.toByteArray())
 
@@ -89,13 +67,16 @@ private fun calculateContentDigest(
         update(manifest.restricted.toByte())
         update(manifest.overridable.toByte())
 
-        for (key in manifest.files.sorted()) {
-            update(key.toByteArray())
-            update(data[key]?.getData() ?: byteArrayOf())
+        for (file in manifest.files.sorted()) {
+            update(file.toByteArray())
+            update(data[file]?.getData() ?: byteArrayOf())
         }
 
-        for ((attribute, value) in manifest.attributes.entries.sortedBy { it.key }) {
-            update(attribute.toByteArray())
+        val nonSignatureAttributes = manifest.attributes - LAST_MODIFICATION_SIGNATURE
+        val sortedAttributes = nonSignatureAttributes.entries
+            .sortedBy { it.key }
+        for ((key, value) in sortedAttributes) {
+            update(key.toByteArray())
             update(value.toString().toByteArray())
         }
     }.digest()

@@ -40,7 +40,7 @@ class SignatureTests : FunSpec(
             ),
         ) { case ->
             deserializeResource(case.file).asClue { resource ->
-                resource.getSignature() shouldBe case.signature
+                resource.calculateSignature().encodeHex() shouldBe case.signature
                 resource.manifest.lastModification shouldBe case.lastModification
             }
         }
