@@ -6,15 +6,17 @@ A simple standalone Kotlin/JVM application to generate or update Ignition projec
 
 First - for now, you'll have to download the .jar file and run it manually. Future streamlining TBD.
 Once you have the self-contained `modification-updater.jar` (and a Java 17 runtime), simply invoke as a jar:
-`java -jar modification-updater.jar ARGS`
+`java -jar modification-updater.jar`
 
-Where `ARGS` is any of the following:
+The command line is broken into three subcommands:
 
-- Any number of Ignition project resource _paths_. You must provide the directory containing the `resource.json` and
-  other files, _not_ any of the specific file paths within.
-- `-s` to switch output mode to be resource signatures
-- `-a, --actor` to update the 'actor' for the provided resources
-- `-t, --timestamp` to override the timestamp used. Otherwise, the current time will be provided.
-
-If the `-s` flag is not provided, a full `resource.json` file be returned to STDOUT - you are responsible for piping it
-into the actual file, overwriting if necessary.
+- `verify [resourcePaths...]` - exits successfully if all the provided resource files have valid signatures. Raises an
+  error code if any have invalid codes. `stderr` can be examined to determine the issue.
+- `signatures [resourcePaths...]` - Echoes to `stdout` the calculated signature for the input resource files, one per
+  line.
+- `update [-a, --actor actor] [-s, --dry-run] [resourcePaths...]` - Updates the provided resource paths, in place, with
+  the provided actor, automatically updating the resource signature. 
+  - If the `actor` flag is not specified, it defaults
+    to the OS user name that invoked the process.
+  - If the dry-run flag is set, instead echoes the updated resource
+    manifests to `stdout`.  

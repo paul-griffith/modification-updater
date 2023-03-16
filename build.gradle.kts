@@ -1,31 +1,24 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
+@Suppress("DSL_SCOPE_VIOLATION") // https://youtrack.jetbrains.com/issue/KTIJ-19369
 plugins {
     application
-    java
-    kotlin("jvm") version "1.6.21"
-    kotlin("plugin.serialization") version "1.6.21"
-    id("com.github.johnrengelman.shadow") version "7.1.2"
+    alias(libs.plugins.kotlin)
+    alias(libs.plugins.serialization)
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.shadow)
 }
 
 repositories {
     mavenCentral()
-    mavenLocal()
 }
 
 dependencies {
-    implementation("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.3.3")
-    implementation("com.github.ajalt.clikt", "clikt", "3.4.0")
-
-    val kotestVersion = "5.3.0"
-    testImplementation("io.kotest", "kotest-runner-junit5", kotestVersion)
-    testImplementation("io.kotest", "kotest-framework-datatest", kotestVersion)
-    testImplementation("io.kotest", "kotest-assertions-core", kotestVersion)
-    testImplementation("io.kotest", "kotest-property", kotestVersion)
+    implementation(libs.serialization.json)
+    implementation(libs.clikt)
+    implementation(libs.bundles.kotest)
 }
 
 group = "io.github.paulgriffith"
-version = "1.0-SNAPSHOT"
+version = "1.0.0-SNAPSHOT"
 description = "modification-updater"
 
 tasks {
@@ -38,25 +31,17 @@ tasks {
         archiveVersion.set("")
         mergeServiceFiles()
     }
-    withType<KotlinCompile> {
-        kotlinOptions {
-            jvmTarget = JavaVersion.VERSION_17.toString()
-            freeCompilerArgs = listOf(
-                "-opt-in=kotlin.RequiresOptIn"
-            )
-        }
+    kotlin {
+        jvmToolchain(libs.versions.java.map(String::toInt).get())
     }
-    withType<Test>().configureEach {
+    test {
         useJUnitPlatform()
+        testLogging {
+            showStandardStreams = true
+        }
     }
 }
 
 application {
     mainClass.set("io.github.paulgriffith.modification.Entrypoint")
-}
-
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
 }

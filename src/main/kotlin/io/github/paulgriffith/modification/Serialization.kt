@@ -8,11 +8,9 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.decodeFromStream
-import java.io.InputStream
 import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.*
 
 @OptIn(ExperimentalSerializationApi::class)
 val JSON = Json {
@@ -45,39 +43,25 @@ object ApplicationScopeDeserializer : KSerializer<Int> {
                 4 -> 'C'
                 7 -> 'A'
                 else -> throw IllegalArgumentException()
-            }
+            },
         )
     }
 }
 
 object InstantSerializer : KSerializer<Instant> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("java.time.Instant", PrimitiveKind.STRING)
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(
+        "java.time.Instant",
+        PrimitiveKind.STRING,
+    )
+
+    private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        .withZone(ZoneId.of("UTC"))
 
     override fun deserialize(decoder: Decoder): Instant {
-        return Instant.parse(decoder.decodeString())
+        return Instant.from(formatter.parse(decoder.decodeString()))
     }
 
     override fun serialize(encoder: Encoder, value: Instant) {
-        encoder.encodeString(DateTimeFormatter.ISO_INSTANT.format(value))
-    }
-}
-
-internal fun Int.toByteArray(): ByteArray = byteArrayOf(
-    (this shr 24).toByte(),
-    (this shr 16).toByte(),
-    (this shr 8).toByte(),
-    this.toByte()
-)
-
-internal fun Boolean.toByte(): Byte = (if (this) 1 else 0).toByte()
-
-private val hexFormat = HexFormat.of()
-
-internal fun ByteArray.toHexString(): String = hexFormat.formatHex(this)
-
-@OptIn(ExperimentalSerializationApi::class)
-fun InputStream.toManifest(): ResourceManifest {
-    return use { resourceStream ->
-        JSON.decodeFromStream(ResourceManifest.serializer(), resourceStream)
+        encoder.encodeString(formatter.format(value))
     }
 }
