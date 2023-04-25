@@ -7,7 +7,7 @@ kotest = "5.5.5"
 kotlin = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ktlint = { id = "org.jlleitschuh.gradle.ktlint", version = "11.3.2" }
-shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.0" }
+shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
 
 [libraries]
 serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.5.0" }
