@@ -11,7 +11,7 @@ shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
 
 [libraries]
 serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version = "1.5.1" }
-clikt = { group = "com.github.ajalt.clikt", name = "clikt", version = "3.5.4" }
+clikt = { group = "com.github.ajalt.clikt", name = "clikt", version = "4.3.0" }
 kotest-junit = { group = "io.kotest", name = "kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions-core = { group = "io.kotest", name = "kotest-assertions-core", version.ref = "kotest" }
 kotest-framework-dataset = { group = "io.kotest", name = "kotest-framework-datatest", version.ref = "kotest" }
